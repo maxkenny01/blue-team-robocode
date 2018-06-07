@@ -9,6 +9,8 @@ public class IntellijBot extends Robot {
         // Spin the gun around slowly... forever
         while (true) {
             turnGunLeft(5);
+            turnLeft(10);
+            ahead(10);
         }
     }
 
