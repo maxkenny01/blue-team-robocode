@@ -1,0 +1,195 @@
+boolean RobotToLeft;
+    boolean RobotToBottom;
+    double moveAmount;
+    double FieldX;
+    double FieldY;
+    double RobotHeading;
+    double DistanceFromWall;
+
+    double turnRightAngleTop;
+    double turnRightAngleBottom;
+    double turnRightAngleLeft;
+    double turnRightAngleRight;
+
+    double travelDistanceTop;
+    double travelDistanceBottom;
+    double travelDistanceLeft;
+    double travelDistanceRight;
+
+    double turnRightAngle;
+    double travelDistance;
+    double time;
+
+    double timeTop;
+    double timeBottom;
+    double timeLeft;
+    double timeRight;
+
+
+    public void run() {
+//        double heading = getHeading();
+//        if (heading >180){
+//            turnRight(360-heading);
+//        } else {
+//
+//            turnLeft(heading);
+//        }
+
+        FieldX = getBattleFieldWidth();
+        FieldY = getBattleFieldHeight();
+        DistanceFromWall = 0;
+
+        moveAmount = Math.max(FieldX, FieldY);
+
+        RobotHeading = getHeading();
+
+        // Time to a wall is time to rotate and then travel distance
+        // Time to rotate is angle / 10 as robot turns 10 degrees per turn
+        // Time to travel distance is sqrt( 2 * distance) for first 8 turns while velocity increases by 1 per turn/per turn
+        // Time to travel after first 8 turns is distance / 8 ... as velocity is 8
+
+        // Time to top wall
+        if (RobotHeading <= 180) {
+            turnRightAngleTop = -1 * RobotHeading;
+            travelDistanceTop = FieldY - getY();
+        } else {
+            turnRightAngleTop = 360 - RobotHeading;
+            travelDistanceTop = FieldY - getY();
+        }
+
+
+        if (travelDistanceTop > 36) {
+            timeTop = 8 + (travelDistanceTop - 36) / 8;
+        } else {
+            timeTop = Math.sqrt(2 * travelDistanceTop);
+        }
+
+        timeTop = timeTop + Math.abs(turnRightAngleTop / 10);
+
+        // Time to bottom wall
+        if (RobotHeading <= 180) {
+            turnRightAngleBottom = 180 - RobotHeading;
+            travelDistanceBottom = getY();
+        } else {
+            turnRightAngleBottom = 180 - RobotHeading;
+            travelDistanceBottom = getY();
+        }
+
+        if (travelDistanceBottom > 36) {
+            timeBottom = 8 + (travelDistanceBottom - 36) / 8;
+        } else {
+            timeBottom = Math.sqrt(2 * travelDistanceBottom);
+        }
+
+
+        timeBottom = timeBottom + Math.abs(turnRightAngleBottom / 10);
+
+        // Time to left wall
+        if (RobotHeading <= 90) {
+            turnRightAngleLeft = -90 - RobotHeading;
+            travelDistanceLeft = getX();
+        } else {
+            turnRightAngleLeft = 270 - RobotHeading;
+            travelDistanceLeft = getX();
+        }
+
+
+        if (travelDistanceLeft > 36) {
+            timeLeft = 8 + (travelDistanceLeft - 36) / 8;
+        } else {
+            timeLeft = Math.sqrt(2 * travelDistanceLeft);
+        }
+
+
+        timeLeft = timeLeft + Math.abs(turnRightAngleLeft / 10);
+
+        // Time to right wall
+        if (RobotHeading <= 270) {
+            turnRightAngleRight = 90 - RobotHeading;
+            travelDistanceRight = FieldX - getX();
+        } else {
+            turnRightAngleRight = 450 - RobotHeading;
+            travelDistanceRight = FieldX - getX();
+        }
+
+
+        if (travelDistanceRight > 36) {
+            timeRight = 8 + (travelDistanceRight - 36) / 8;
+        } else {
+            timeRight = Math.sqrt(2 * travelDistanceRight);
+        }
+
+
+        timeRight = timeRight + Math.abs(turnRightAngleRight / 10);
+
+
+        // Collect data about closest wall - first assume left wall
+        turnRightAngle = turnRightAngleLeft;
+        travelDistance = travelDistanceLeft;
+        time = timeLeft;
+
+        // Then see if right wall closer
+        if (timeRight < time) {
+            turnRightAngle = turnRightAngleRight;
+            travelDistance = travelDistanceRight;
+            time = timeRight;
+        }
+
+
+        // Then see if top wall close
+        if (timeTop < time) {
+            turnRightAngle = turnRightAngleTop;
+            travelDistance = travelDistanceTop;
+            time = timeTop;
+        }
+
+
+
+        // Then see if bottom wall closer
+        if (timeBottom < time) {
+            turnRightAngle = turnRightAngleBottom;
+            travelDistance = travelDistanceBottom;
+            time = timeBottom;
+        }
+
+        turnRight(turnRightAngle);
+        ahead(travelDistance - DistanceFromWall);
+        turnGunRight(90);
+        turnRight(90);
+
+        while (true) {
+            ahead(moveAmount);
+            turnRight(90);
+        }
+    }
+
+    @Override
+    public void onHitByBullet(HitByBulletEvent event) {
+//        double bulletDirection = event.getBearing();
+//        turnLeft(bulletDirection );
+
+//        turnRadarGun(bulletDirection );
+        fire(3);
+//        ahead(100);
+
+    }
+
+//    @Override
+//    public void onHitWall(HitWallEvent event) {
+//        double bearing = event.getBearing();
+//        turnLeft(90);
+//    }
+
+    @Override
+    public void onScannedRobot(ScannedRobotEvent e) {
+        turnGunRight(getHeading() - getGunHeading() + e.getBearing());
+        if (e.getDistance() < 50) {
+            fire(3);
+        }
+        scan();
+    }
+
+    private void turnRadarGun(double degrees) {
+        turnGunLeft(degrees);
+        turnRadarLeft(degrees);
+    }
